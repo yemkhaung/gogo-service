@@ -1,11 +1,17 @@
 package main
 
 import (
-	"fmt"
+	"os"
 
-	"rsc.io/quote"
+	service "github.com/yemkhaung/gogo-service/service"
 )
 
 func main() {
-	fmt.Println(quote.Hello())
+	port := os.Getenv("PORT")
+	if len(port) == 0 {
+		port = "3000"
+	}
+
+	server := service.NewServer()
+	server.Run(":" + port)
 }
