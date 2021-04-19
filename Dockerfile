@@ -8,4 +8,4 @@ WORKDIR /go/src/gogo-service
 
 RUN go install ./...
 
-ENTRYPOINT SERVICE_NAME
+ENTRYPOINT $SERVICE_NAME
