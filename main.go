@@ -1,17 +1,38 @@
 package main
 
 import (
-	"os"
+	"flag"
+	"fmt"
 
-	service "github.com/yemkhaung/gogo-service/service"
+	"github.com/codegangsta/negroni"
+	catalog "github.com/yemkhaung/gogo-service/backing-catalog"
+	fufilment "github.com/yemkhaung/gogo-service/backing-fufilment"
+	"github.com/yemkhaung/gogo-service/gogoservice"
 )
 
-func main() {
-	port := os.Getenv("PORT")
-	if len(port) == 0 {
-		port = "3000"
-	}
+var (
+	server      *negroni.Negroni
+	serviceName string
+	port        string
+)
 
-	server := service.NewServer()
+func init() {
+	flag.StringVar(&serviceName, "service", "gogo", "Name of service to run. Must be 'gogo' or 'fufilment' or 'catalog'")
+	flag.StringVar(&port, "port", "3000", "Service port.")
+}
+
+func main() {
+	flag.Parse()
+	switch serviceName {
+	case "gogo":
+		server = gogoservice.NewServer()
+
+	case "fufilment":
+		server = fufilment.NewServer()
+
+	case "catalog":
+		server = catalog.NewServer()
+	}
+	fmt.Printf("Running '%s' service...\n", serviceName)
 	server.Run(":" + port)
 }
