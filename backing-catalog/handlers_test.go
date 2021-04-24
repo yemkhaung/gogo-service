@@ -13,7 +13,7 @@ var targetSKU = "MUMBOJUMBO99"
 // fufilment web client stub
 type fakeWebClient struct{}
 
-func (fc fakeWebClient) getFulfilmentStatus(sku string) (status fufilmentStatusResponse, err error) {
+func (fc *fakeWebClient) getFulfilmentStatus(sku string) (status fufilmentStatusResponse, err error) {
 	status = fufilmentStatusResponse{
 		QuantityInStock: 100,
 		ShipsWithin:     14,
@@ -25,7 +25,7 @@ func (fc fakeWebClient) getFulfilmentStatus(sku string) (status fufilmentStatusR
 func TestGetCatalogDetail(t *testing.T) {
 	// prepare
 	fakeClient := fakeWebClient{}
-	server := NewServerWithClient(fakeClient)
+	server := NewServerWithClient(&fakeClient)
 	req, err := http.NewRequest("GET", "/catalog/"+targetSKU, nil)
 	resp := httptest.NewRecorder()
 	server.ServeHTTP(resp, req)

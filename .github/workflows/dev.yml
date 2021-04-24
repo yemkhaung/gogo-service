@@ -59,8 +59,33 @@ jobs:
     - name: Image digest
       run: echo ${{ steps.docker_build.outputs.digest }}
 
-  deploy:
+  integration:
     needs: build
+    runs-on: ubuntu-latest
+    container: golang:1.16
+
+    services:
+      mongodb:
+        image: mongo
+
+    steps:
+      - name: Check Out Repo
+        uses: actions/checkout@v2
+
+      - name: Run service
+        run: |
+          go mod tidy
+          go run .
+        env:
+          MONGODB_URL: "mongodb://localhost:27017"
+
+      - name: Run integration test
+        run: |
+          go test ./integrations/_test -v -race
+
+
+  deploy:
+    needs: integration
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo 

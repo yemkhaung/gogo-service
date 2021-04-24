@@ -2,6 +2,7 @@ package catalog
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,11 +16,12 @@ type fufilmentWebClient struct {
 	url string
 }
 
-func (c fufilmentWebClient) getFulfilmentStatus(sku string) (status fufilmentStatusResponse, err error) {
+func (c *fufilmentWebClient) getFulfilmentStatus(sku string) (status fufilmentStatusResponse, err error) {
+
 	client := &http.Client{}
 	req, _ := http.NewRequest(
 		"GET",
-		"http://"+c.url+"/skus/"+sku,
+		fmt.Sprintf("http://%s/skus/%s", c.url, sku),
 		nil,
 	)
 

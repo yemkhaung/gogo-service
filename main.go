@@ -1,8 +1,8 @@
 package main
 
 import (
-	"flag"
 	"fmt"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	catalog "github.com/yemkhaung/gogo-service/backing-catalog"
@@ -11,18 +11,22 @@ import (
 )
 
 var (
-	server      *negroni.Negroni
-	serviceName string
-	port        string
+	server *negroni.Negroni
 )
 
-func init() {
-	flag.StringVar(&serviceName, "service", "gogo", "Name of service to run. Must be 'gogo' or 'fufilment' or 'catalog'")
-	flag.StringVar(&port, "port", "3000", "Service port.")
+func getenv(name string, defaultval string) (result string) {
+	result = os.Getenv(name)
+	if result == "" {
+		return defaultval
+	}
+	return result
 }
 
 func main() {
-	flag.Parse()
+	// parse envs
+	serviceName := getenv("SERVICE_NAME", "gogo")
+	port := getenv("SERVICE_PORT", "3000")
+
 	switch serviceName {
 	case "gogo":
 		server = gogoservice.NewServer()

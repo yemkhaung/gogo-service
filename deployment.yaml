@@ -1,0 +1,39 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: gogame
+  name: gogame
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gogame
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: gogame
+    spec:
+      containers:
+      - name: gogame
+        image: galonedocker/gogo-service:latest
+        resources:
+          requests:
+            cpu: 250m
+            memory: 64Mi
+          limit:
+            cpu: 500m
+            memory: 128Mi
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gogo-service
+spec:
+  selector:
+    app: gogame
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 3000

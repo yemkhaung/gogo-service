@@ -8,14 +8,6 @@ import (
 	"net/http/httptest"
 	"strings"
 	"testing"
-
-	"github.com/unrolled/render"
-)
-
-var (
-	formatter = render.New(render.Options{
-		IndentJSON: true,
-	})
 )
 
 const (
@@ -25,52 +17,49 @@ const (
 //nolint // not required for test case
 func TestCreateMatch(t *testing.T) {
 	// prepare
-	client := &http.Client{}
 	repo := newInMemMatchRepository()
-	server := httptest.NewServer(
-		http.HandlerFunc(createMatchHandler(formatter, repo)),
-	)
-	defer server.Close()
+	server := NewServerWithRepo(repo)
 
-	body := []byte("{\n  \"gridsize\": 19,\n  \"players\":  [\n    {\n    \"color\":  \"white\",\n      \"name\": \"bob\"\n    },\n    {\n    \"color\":  \"black\",\n      \"name\": \"alfred\"\n    }\n  ]\n}")
+	body := []byte("{\n  \"gridsize\": 19,\n  \"player_white\": \"bob\",\n  \"player_black\": \"alfred\"\n}")
 
-	req, err := http.NewRequest("POST", server.URL, bytes.NewBuffer(body))
+	resp := httptest.NewRecorder()
+	req, err := http.NewRequest("POST", "/matches", bytes.NewBuffer(body))
 	if err != nil {
 		t.Errorf("Error in creating POST request for createMatchHandler: %v", err)
+		return
 	}
-	req.Header.Add("Conetnt-Type", "application/json")
+	req.Header.Add("Content-Type", "application/json")
+	server.ServeHTTP(resp, req)
 
-	// execute
-	res, err := client.Do(req)
-	if err != nil {
-		t.Errorf("Error in POST to creatematchHandler: %v", err)
-	}
-
-	defer res.Body.Close()
-	payload, err := ioutil.ReadAll(res.Body)
+	payload, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		t.Errorf("Error reading response body: %v", err)
+		return
 	}
 
 	// assert Status code
-	if res.StatusCode != http.StatusCreated {
-		t.Errorf("Expected response status 201, received %s", res.Status)
+	if resp.Code != http.StatusCreated {
+		t.Errorf("Expected response status 201, received %d", resp.Code)
+		return
 	}
 
 	// assert Location header
-	loc, ok := res.Header["Location"]
-	if !ok || loc == nil {
+	loc := resp.Header().Get("Location")
+	if loc == "" {
 		t.Error("Location header is not set")
+		return
 	}
 
 	// assert Location header patttern
-	if !strings.Contains(loc[0], "/matches/") {
+	if !strings.Contains(loc, "/matches/") {
 		t.Error("Location header should contain '/matches/'")
+		return
 	}
 
 	// assert Location header length
-	if len(loc[0]) != len(fakeMatchLocationResult) {
-		t.Errorf("Expected Location header to have same length of %d, got %d", len(fakeMatchLocationResult), len(loc[0]))
+	if len(loc) != len(fakeMatchLocationResult) {
+		t.Errorf("Expected Location header to have same length of %d, got %d", len(fakeMatchLocationResult), len(loc))
+		return
 	}
 
 	// assert ID in response with ID in Location Header
@@ -78,33 +67,35 @@ func TestCreateMatch(t *testing.T) {
 	err = json.Unmarshal(payload, &matchResponse)
 	if err != nil {
 		t.Error("Error. Response payload cannot be JSON encoded.")
+		return
 	}
-	if matchResponse.ID == "" || !strings.Contains(loc[0], matchResponse.ID) {
-		t.Errorf("Expected Match ID of %s, got %s", loc[0], matchResponse.ID)
+	if matchResponse.ID == "" || !strings.Contains(loc, matchResponse.ID) {
+		t.Errorf("Expected Match ID of %s, got %s", loc, matchResponse.ID)
+		return
 	}
 
 	// assert match is added to repository
-	matches := repo.getMatches()
-	if len(matches) != 1 {
+	matches, err := repo.getMatches()
+	if err != nil || len(matches) != 1 {
 		t.Errorf("Expected 1 match exists in repository, got %d", len(matches))
+		return
 	}
 	match := matches[0]
+	if match.ID != matchResponse.ID {
+		t.Errorf("Expected match ID of %s, got %s", match.ID, matchResponse.ID)
+		return
+	}
 	if match.GridSize != matchResponse.GridSize {
 		t.Errorf("Expected matching gridsize of %d, got %d", match.GridSize, matchResponse.GridSize)
+		return
 	}
-	if len(matchResponse.Players) != 2 {
-		t.Error("Expected 2 players from added match.")
+	if match.PlayerBlack != matchResponse.PlayerBlack {
+		t.Errorf("Expected black player name of %s, got %s", matchResponse.PlayerBlack, match.PlayerBlack)
+		return
 	}
-	for _, player := range matchResponse.Players {
-		if player.Color == "black" {
-			if player.Name != match.PlayerBlack {
-				t.Errorf("Expected black player name of %s, got %s", player.Name, match.PlayerBlack)
-			}
-		} else if player.Color == "white" {
-			if player.Name != match.PlayerWhite {
-				t.Errorf("Expected white player name of %s, got %s", player.Name, match.PlayerWhite)
-			}
-		}
+	if match.PlayerWhite != matchResponse.PlayerWhite {
+		t.Errorf("Expected white player name of %s, got %s", matchResponse.PlayerWhite, match.PlayerWhite)
+		return
 	}
 }
 
@@ -117,29 +108,21 @@ var invalidRequestTable = []string{
 
 func TestNewMatchInvalidRequest(t *testing.T) {
 	// prepare
-	client := &http.Client{}
 	repo := newInMemMatchRepository()
-	server := httptest.NewServer(
-		http.HandlerFunc(createMatchHandler(formatter, repo)),
-	)
-	defer server.Close()
+	server := NewServerWithRepo(repo)
 
 	for _, val := range invalidRequestTable {
 		body := []byte(val)
-		req, err := http.NewRequest("POST", server.URL, bytes.NewBuffer(body))
+		req, err := http.NewRequest("POST", "/matches", bytes.NewBuffer(body))
 		if err != nil {
 			t.Errorf("Error in creating POST request for createMatchHandler: %v", err)
 		}
 		req.Header.Add("Conetnt-Type", "application/json")
-		// execute
-		res, err := client.Do(req)
-		if err != nil {
-			t.Errorf("Error in POST to creatematchHandler: %v", err)
-		}
-		defer res.Body.Close()
+		res := httptest.NewRecorder()
+		server.ServeHTTP(res, req)
 		// assert Status code
-		if res.StatusCode != http.StatusBadRequest {
-			t.Errorf("Expected response status 400, received %s", res.Status)
+		if res.Code != http.StatusBadRequest {
+			t.Errorf("Expected response status 400, received %d", res.Code)
 		}
 	}
 }
