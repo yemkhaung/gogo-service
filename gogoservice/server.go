@@ -3,7 +3,6 @@ package gogoservice
 import (
 	"log"
 	"net/http"
-	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -11,8 +10,7 @@ import (
 )
 
 // NewServer configures and returns a new server
-func NewServer() *negroni.Negroni {
-	dbURL := os.Getenv("MONGODB_URL")
+func NewServer(dbURL string) *negroni.Negroni {
 	return NewServerWithRepo(newPersistRepository(dbURL))
 }
 

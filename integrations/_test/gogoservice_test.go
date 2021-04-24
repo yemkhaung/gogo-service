@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"os"
 	"testing"
 
 	"github.com/cloudnativego/gogo-engine"
@@ -19,12 +20,20 @@ type newMatchResponse struct {
 }
 
 var (
-	baseURL = "http://localhost:3000/matches"
+	baseURL = getenv("SERVICE_URL", "http://localhost:3000") + "/matches"
 	matches = [][]byte{
 		[]byte("{\n  \"gridsize\": 19,\n  \"player_white\": \"bob\",\n  \"player_black\": \"alfred\"\n}"),
 		[]byte("{\n  \"gridsize\": 19,\n  \"player_white\": \"john\",\n  \"player_black\": \"mary\"\n}"),
 	}
 )
+
+func getenv(name string, defval string) string {
+	env := os.Getenv(name)
+	if env == "" {
+		return defval
+	}
+	return env
+}
 
 func TestIntegration(t *testing.T) {
 	emptyMatches, err := getMatches(t)

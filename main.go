@@ -14,7 +14,8 @@ var (
 	server *negroni.Negroni
 )
 
-func getenv(name string, defaultval string) (result string) {
+// Getenv gets environment variable with default value
+func Getenv(name string, defaultval string) (result string) {
 	result = os.Getenv(name)
 	if result == "" {
 		return defaultval
@@ -24,12 +25,13 @@ func getenv(name string, defaultval string) (result string) {
 
 func main() {
 	// parse envs
-	serviceName := getenv("SERVICE_NAME", "gogo")
-	port := getenv("SERVICE_PORT", "3000")
+	serviceName := Getenv("SERVICE_NAME", "gogo")
+	port := Getenv("SERVICE_PORT", "3000")
 
 	switch serviceName {
 	case "gogo":
-		server = gogoservice.NewServer()
+		dbURL := Getenv("MONGODB_URL", "mongodb://localhost:27017")
+		server = gogoservice.NewServer(dbURL)
 
 	case "fufilment":
 		server = fufilment.NewServer()

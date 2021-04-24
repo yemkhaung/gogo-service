@@ -1,11 +1,11 @@
 FROM golang:1.16
 RUN go version
 
-ENV SERVICE_NAME="gogo-service"
+ENV APP_NAME="gogo-service"
 
-COPY . /go/src/gogo-service
-WORKDIR /go/src/gogo-service
+COPY . /go/src/${APP_NAME}
+WORKDIR /go/src/${APP_NAME}
 
-RUN go install ./...
+RUN go install .
 
-ENTRYPOINT $SERVICE_NAME
+ENTRYPOINT ${APP_NAME}
