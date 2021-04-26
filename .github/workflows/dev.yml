@@ -12,19 +12,26 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Lint
+        uses: golangci/golangci-lint-action@v2
+
+      - name: Slack Notification
+        if: failure()
+        uses: rtCamp/action-slack-notify@v2
+        env:
+          SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
+          SLACK_COLOR: ${{ job.status }}
+  
+  unit-test:
+    needs: lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+
       - name: Set up Go
         uses: actions/setup-go@v2
         with:
           go-version: 1.16
-
-      - name: Build
-        run: go build -v ./...
-
-      - name: Vet
-        run: go vet .
-
-      - name: Lint
-        uses: golangci/golangci-lint-action@v2
 
       - name: Test
         run: go test -v ./...
@@ -37,7 +44,7 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
 
   build:
-    needs: lint
+    needs: unit-test
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
@@ -72,7 +79,7 @@ jobs:
           SLACK_WEBHOOK: ${{ secrets.SLACK_WEBHOOK }}
           SLACK_COLOR: ${{ job.status }}
 
-  integration:
+  integration-test:
     needs: build
     runs-on: ubuntu-latest
     container: golang:1.16
@@ -104,7 +111,7 @@ jobs:
           SLACK_COLOR: ${{ job.status }}
 
   deploy:
-    needs: integration
+    needs: integration-test
     runs-on: ubuntu-latest
     steps:
       - name: Check Out Repo
