@@ -25,8 +25,9 @@ type dbConnection struct {
 }
 
 func (conn dbConnection) disconnect() {
-	// conn.cancelCtx()
-	_ = conn.client.Disconnect(conn.ctx)
+	if conn.ctx != nil {
+		_ = conn.client.Disconnect(conn.ctx)
+	}
 }
 
 func newPersistRepository(dbURL string) *persistMatchRepository {
