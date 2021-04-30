@@ -1,8 +1,10 @@
 package gogoservice
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -10,7 +12,8 @@ import (
 )
 
 // NewServer configures and returns a new server
-func NewServer(dbURL string) *negroni.Negroni {
+func NewServer() *negroni.Negroni {
+	dbURL := parseDBURL()
 	return NewServerWithRepo(newPersistRepository(dbURL))
 }
 
@@ -42,4 +45,18 @@ func rootHandler(formatter *render.Render) http.HandlerFunc {
 			log.Printf("Error handling request, %v", err)
 		}
 	}
+}
+
+func parseDBURL() string {
+	mongoHost := getenv("MONGODB_HOST", "localhost")
+	mongoPort := getenv("MONGODB_PORT", "27017")
+	return fmt.Sprintf("mongodb://%s:%s", mongoHost, mongoPort)
+}
+
+func getenv(name string, defaultval string) (result string) {
+	result = os.Getenv(name)
+	if result == "" {
+		return defaultval
+	}
+	return result
 }

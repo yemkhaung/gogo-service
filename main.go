@@ -7,15 +7,11 @@ import (
 	"github.com/codegangsta/negroni"
 	catalog "github.com/yemkhaung/gogo-service/backing-catalog"
 	fufilment "github.com/yemkhaung/gogo-service/backing-fufilment"
-	"github.com/yemkhaung/gogo-service/gogoservice"
+	dronescmds "github.com/yemkhaung/gogo-service/drones-cmds"
+	gogo "github.com/yemkhaung/gogo-service/gogoservice"
 )
 
-var (
-	server *negroni.Negroni
-)
-
-// Getenv gets environment variable with default value
-func Getenv(name string, defaultval string) (result string) {
+func getenv(name string, defaultval string) (result string) {
 	result = os.Getenv(name)
 	if result == "" {
 		return defaultval
@@ -23,22 +19,30 @@ func Getenv(name string, defaultval string) (result string) {
 	return result
 }
 
+func getServiceEnvs() (serviceName string, servicePort string) {
+	serviceName = getenv("SERVICE_NAME", "gogo")
+	servicePort = getenv("SERVICE_PORT", "3000")
+	return serviceName, servicePort
+}
+
 func main() {
-	// parse envs
-	serviceName := Getenv("SERVICE_NAME", "gogo")
-	port := Getenv("SERVICE_PORT", "3000")
+	serviceName, servicePort := getServiceEnvs()
+	var server *negroni.Negroni
 
 	switch serviceName {
 	case "gogo":
-		dbURL := Getenv("MONGODB_URL", "mongodb://localhost:27017")
-		server = gogoservice.NewServer(dbURL)
+		server = gogo.NewServer()
 
 	case "fufilment":
 		server = fufilment.NewServer()
 
 	case "catalog":
 		server = catalog.NewServer()
+
+	case "dronescmds":
+		server = dronescmds.NewServer()
 	}
+
 	fmt.Printf("Running '%s' service...\n", serviceName)
-	server.Run(":" + port)
+	server.Run(":" + servicePort)
 }
