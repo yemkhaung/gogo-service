@@ -8,6 +8,7 @@ import (
 	catalog "github.com/yemkhaung/gogo-service/backing-catalog"
 	fufilment "github.com/yemkhaung/gogo-service/backing-fufilment"
 	dronescmds "github.com/yemkhaung/gogo-service/drones-cmds"
+	dronesevents "github.com/yemkhaung/gogo-service/drones-events"
 	gogo "github.com/yemkhaung/gogo-service/gogoservice"
 )
 
@@ -32,15 +33,14 @@ func main() {
 	switch serviceName {
 	case "gogo":
 		server = gogo.NewServer()
-
 	case "fufilment":
 		server = fufilment.NewServer()
-
 	case "catalog":
 		server = catalog.NewServer()
-
 	case "dronescmds":
 		server = dronescmds.NewServer()
+	case "dronesevents":
+		server = dronesevents.NewServer()
 	}
 
 	fmt.Printf("Running '%s' service...\n", serviceName)

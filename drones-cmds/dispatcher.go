@@ -29,6 +29,10 @@ func newRabbitMQDispatcher(queue string, url string) (dispatcher *rabbitMQDispat
 func (d *rabbitMQDispatcher) Dispatch(queue string, event interface{}) (err error) {
 	// establish rabbitmq connection
 	conn, err := d.connect()
+	if err != nil {
+		log.Printf("Failed to connect to amqp: %s", err)
+		return err
+	}
 	defer conn.close()
 	// send message
 	msg, err := json.Marshal(&event)
@@ -37,7 +41,7 @@ func (d *rabbitMQDispatcher) Dispatch(queue string, event interface{}) (err erro
 		return err
 	}
 	// create queue (indempotent: creates only if it doesn't exist)
-	_, err = conn.Channel.QueueDeclare(
+	q, err := conn.Channel.QueueDeclare(
 		queue, // name
 		false, // durable
 		false, // delete when unused
@@ -50,10 +54,10 @@ func (d *rabbitMQDispatcher) Dispatch(queue string, event interface{}) (err erro
 		return err
 	}
 	err = conn.Channel.Publish(
-		"",    // exchange
-		queue, // routing key
-		false, // mandatory
-		false, // immediate
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
 		amqp.Publishing{
 			ContentType: "text/plain",
 			Body:        msg,
@@ -62,6 +66,7 @@ func (d *rabbitMQDispatcher) Dispatch(queue string, event interface{}) (err erro
 		log.Println("Failed to publish a message", err)
 		return err
 	}
+	log.Printf("Published event to (%s) queue", q.Name)
 	return
 }
 
@@ -78,11 +83,12 @@ func (d *rabbitMQDispatcher) connect() (rabbitMqConnection, error) {
 		log.Println("Failed to open a channel", err)
 		return rabbitMqConnection{}, err
 	}
-
+	log.Println("Connected to rabbitmq")
 	return rabbitMqConnection{conn, ch}, nil
 }
 
 func (rc *rabbitMqConnection) close() {
 	rc.Connection.Close()
 	rc.Channel.Close()
+	log.Println("Connection to rabbitmq is closed")
 }
