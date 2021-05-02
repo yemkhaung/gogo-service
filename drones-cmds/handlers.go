@@ -9,21 +9,6 @@ import (
 	"github.com/unrolled/render"
 )
 
-type telemetryCommandEvent struct {
-	Telemetry  telemetryCommand `json:"telemetry"`
-	ReceivedOn int64            `json:"received_on"`
-}
-
-type alertCommandEvent struct {
-	Alert      alertCommand `json:"alert"`
-	ReceivedOn int64        `json:"received_on"`
-}
-
-type positionCommandEvent struct {
-	Position   positionCommand `json:"position"`
-	ReceivedOn int64           `json:"received_on"`
-}
-
 func submitTelemetry(formatter *render.Render, dispatcher amqpDispatcher) http.HandlerFunc {
 	return func(rw http.ResponseWriter, req *http.Request) {
 		// parse message

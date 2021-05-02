@@ -54,30 +54,38 @@ func TestConsumeTelemetryEvents(t *testing.T) {
 	}
 	// testing events
 	telemetryEvent := TelemetryUpdatedEvent{
-		DroneID:          "d-001",
-		RemainingBattery: 50,
-		Uptime:           120,
-		CoreTemp:         25,
-		ReceivedOn:       time.Now().Unix(),
+		Telemetry: TelemetryCommand{
+			DroneID:          "d-001",
+			RemainingBattery: 50,
+			Uptime:           120,
+			CoreTemp:         25,
+		},
+		ReceivedOn: time.Now().Unix(),
 	}
 	alertEvent := AlertSignalledEvent{
-		DroneID:     "d-001",
-		FaultCode:   55,
-		Description: "test error",
+		Alert: AlertCommand{
+			DroneID:   "d-001",
+			FaultCode: 55,
+		},
+		ReceivedOn: time.Now().Unix(),
 	}
 	alertEvent2 := AlertSignalledEvent{
-		DroneID:     "d-001",
-		FaultCode:   100,
-		Description: "test error 2",
+		Alert: AlertCommand{
+			DroneID:   "d-001",
+			FaultCode: 100,
+		},
+		ReceivedOn: time.Now().Unix(),
 	}
 	positionEvent := PositionChangedEvent{
-		DroneID:         "d-001",
-		Latitude:        100.5,
-		Longitude:       50.5,
-		Altitude:        200.5,
-		CurrentSpeed:    20.5,
-		HeadingCardinal: 10,
-		ReceivedOn:      time.Now().Unix(),
+		Position: PositionCommand{
+			DroneID:         "d-001",
+			Latitude:        100.5,
+			Longitude:       50.5,
+			Altitude:        200.5,
+			CurrentSpeed:    20.5,
+			HeadingCardinal: 10,
+		},
+		ReceivedOn: time.Now().Unix(),
 	}
 	// publish test events
 	telemetryConsumer.channel <- telemetryEvent
@@ -89,13 +97,13 @@ func TestConsumeTelemetryEvents(t *testing.T) {
 	time.Sleep(time.Second * 1)
 
 	// assertions
-	if queryStore.lastTelemetry.DroneID != "d-001" {
-		t.Errorf("Expected telemetry DroneID: %s, got %s", telemetryEvent.DroneID, queryStore.lastPosition.DroneID)
+	if queryStore.lastTelemetry.Telemetry.DroneID != "d-001" {
+		t.Errorf("Expected telemetry DroneID: %s, got %s", telemetryEvent.Telemetry.DroneID, queryStore.lastTelemetry.Telemetry.DroneID)
 	}
-	if queryStore.lastAlert.FaultCode != 100 {
-		t.Errorf("Expected alert FaultCode: %d, got %d", alertEvent2.FaultCode, queryStore.lastAlert.FaultCode)
+	if queryStore.lastAlert.Alert.FaultCode != 100 {
+		t.Errorf("Expected alert FaultCode: %d, got %d", alertEvent2.Alert.FaultCode, queryStore.lastAlert.Alert.FaultCode)
 	}
-	if queryStore.lastPosition.Altitude != 200.5 {
-		t.Errorf("Expected position Altitude: %f, got %f", positionEvent.Altitude, queryStore.lastPosition.Altitude)
+	if queryStore.lastPosition.Position.Altitude != 200.5 {
+		t.Errorf("Expected position Altitude: %f, got %f", positionEvent.Position.Altitude, queryStore.lastPosition.Position.Altitude)
 	}
 }

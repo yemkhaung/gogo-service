@@ -51,3 +51,18 @@ func (p positionCommand) isValid() bool {
 	}
 	return true
 }
+
+type telemetryCommandEvent struct {
+	Telemetry  telemetryCommand `json:"telemetry"`
+	ReceivedOn int64            `json:"received_on"`
+}
+
+type alertCommandEvent struct {
+	Alert      alertCommand `json:"alert"`
+	ReceivedOn int64        `json:"received_on"`
+}
+
+type positionCommandEvent struct {
+	Position   positionCommand `json:"position"`
+	ReceivedOn int64           `json:"received_on"`
+}

@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"os"
 
 	"github.com/codegangsta/negroni"
@@ -43,6 +43,6 @@ func main() {
 		server = dronesevents.NewServer()
 	}
 
-	fmt.Printf("Running '%s' service...\n", serviceName)
+	log.Printf("Running '%s' service...\n", serviceName)
 	server.Run(":" + servicePort)
 }

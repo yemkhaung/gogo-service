@@ -2,7 +2,6 @@ package gogoservice
 
 import (
 	"context"
-	"fmt"
 	"log"
 	"time"
 
@@ -63,7 +62,7 @@ func (pr *persistMatchRepository) addMatch(match gogo.Match) (err error) {
 		log.Println(err)
 		return err
 	}
-	fmt.Println("Inserted match: ", result.InsertedID)
+	log.Println("Inserted match: ", result.InsertedID)
 	return nil
 }
 
