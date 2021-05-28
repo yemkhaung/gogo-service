@@ -52,7 +52,7 @@ func (reg *consumerRegistry) consumeEvents() error {
 			for event := range msgs {
 				err := proc.Process(event)
 				if err != nil {
-					log.Printf("Error processing event: %s", err)
+					log.Printf("Error processing event: %v, err: %s", event, err)
 				}
 			}
 		}(eventsQ, processor)

@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"runtime/debug"
 
 	"github.com/codegangsta/negroni"
 	"github.com/gorilla/mux"
@@ -57,6 +58,7 @@ func rootHandler(formatter *render.Render) http.HandlerFunc {
 		err := formatter.JSON(rw, http.StatusOK, struct{ Version string }{"0.0.1"})
 		if err != nil {
 			log.Printf("Error handling request, %v", err)
+			debug.PrintStack()
 		}
 	}
 }

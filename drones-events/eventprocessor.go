@@ -3,6 +3,7 @@ package dronesevents
 import (
 	"encoding/json"
 	"log"
+	"runtime/debug"
 )
 
 type eventProcessor interface {
@@ -17,12 +18,13 @@ func (tp *telemetryProcessor) Process(event interface{}) error {
 	// TODO do complex calculations
 	log.Println("Processing telemetry event...[started]")
 	payload, _ := json.Marshal(event)
-	var telemetryEvent TelemetryUpdatedEvent
+	var telemetryEvent TelemetryEvent
 	_ = json.Unmarshal(payload, &telemetryEvent)
-
-	err := tp.QueryStore.UpdateLastTelemetryEvent(telemetryEvent)
+	telemetryRecord := convertToTelemetryRecord(telemetryEvent)
+	err := tp.QueryStore.UpdateLastTelemetryEvent(telemetryRecord)
 	if err != nil {
-		log.Printf("Error storing telemetry event: %s", err)
+		log.Printf("Error storing telemetry: %v, err: %s", telemetryRecord, err)
+		debug.PrintStack()
 		return err
 	}
 	log.Println("Processing telemetry event...[done]")
@@ -37,12 +39,13 @@ func (tp *alertsProcessor) Process(event interface{}) error {
 	// TODO do complex calculations
 	log.Println("Processing alert event...[started]")
 	payload, _ := json.Marshal(event)
-	var alertEvent AlertSignalledEvent
+	var alertEvent AlertEvent
 	_ = json.Unmarshal(payload, &alertEvent)
-
-	err := tp.QueryStore.UpdateLastAlertEvent(alertEvent)
+	alertRecord := convertToAlertRecord(alertEvent)
+	err := tp.QueryStore.UpdateLastAlertEvent(alertRecord)
 	if err != nil {
-		log.Printf("Error storing alert event: %s", err)
+		log.Printf("Error storing alert event: %v, err: %s", alertRecord, err)
+		debug.PrintStack()
 		return err
 	}
 	log.Println("Processing alert event...[done]")
@@ -57,12 +60,13 @@ func (tp *positionsProcessor) Process(event interface{}) error {
 	// TODO do complex calculations
 	log.Println("Processing position event...[started]")
 	payload, _ := json.Marshal(event)
-	var positionEvent PositionChangedEvent
+	var positionEvent PositionEvent
 	_ = json.Unmarshal(payload, &positionEvent)
-
-	err := tp.QueryStore.UpdateLastPositionEvent(positionEvent)
+	positionRecord := convertToPositionRecord(positionEvent)
+	err := tp.QueryStore.UpdateLastPositionEvent(positionRecord)
 	if err != nil {
-		log.Printf("Error storing position event: %s", err)
+		log.Printf("Error storing position event: %v, err: %s", positionRecord, err)
+		debug.PrintStack()
 		return err
 	}
 	log.Println("Processing position event...[done]")
